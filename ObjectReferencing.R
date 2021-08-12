@@ -1,12 +1,5 @@
 ### Check object referencing ---------------------------------------------------
 
-# Create variables
-mat_a = matrix(nrow=100,ncol=100)
-mat_b = newPointer(mat_a)
-all_matrices = list(mat_a,
-                    mat_b)
-
-
 # Create object pointer function
 newPointer=function(inputValue){ 
   object=new.env(parent=globalenv()) 
@@ -25,6 +18,12 @@ alterMatrix <- function(m, k){
   }
   return(m)
 }
+
+# Create variables
+mat_a = matrix(nrow=100,ncol=100)
+mat_b = newPointer(mat_a)
+all_matrices = list(mat_a,
+                    mat_b)
 
 # Check matrices prior to being processed
 # print(mat_a)
