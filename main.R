@@ -21,7 +21,7 @@ my_stats <- function(mat,iterations){
 }
 
 #Seurat Demo Pipeline
-iterations <- 10
+iterations <- 1
 seuratdemo_metrics <- matrix(nrow=iterations, ncol=1)
 for(i in 1:iterations) {
   # Run metrics and pipeline
