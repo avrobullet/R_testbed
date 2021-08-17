@@ -3,6 +3,7 @@ library(dplyr)
 library(patchwork)
 library(matrixStats)
 library(aws.s3)
+library(sjmisc)
 
 # Object Referencing/Pointing (hacking)
 #source(paste0(getwd(),"/ObjectReferencing.R"))

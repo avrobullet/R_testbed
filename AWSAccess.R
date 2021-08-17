@@ -4,12 +4,18 @@ Sys.setenv(
   "AWS_DEFAULT_REGION" = "us-west-2"
 )
 
+# Variables
+config_main <- list(
+  resultspath = "100-plex/NSCLC_HIO/"
+)
+
+# Get S3 object from NanoString bucket
 nanostring_bucket <- aws.s3::get_bucket("nanostring-external-smi-commercial")
-for(bucket_key in nanostring_bucket$Contents){
-  if(bucket_key == '100-plex/'){
-    print(nanostring_bucket$Contents[bucket_key])
+# Convert NanoString S3 object into a data.table to better make use of its keys
+nanostring_bucket_table <- data.table::rbindlist(nanostring_bucket)
+# Only keep keys that are needed for the experiment
+for(key in nanostring_bucket_table[, Key]){
+  if(str_contains(key, config_main$resultspath)){ #str_contains(key, "100-plex/NSCLC_HIO/")
+    print(key)
   }
 }
-# some_data <- s3read_using(FUN = read.csv,
-#                           object = '100-plex/NSCLC_HIO/Run90089_Lung09c-HIO-1M-D03-S1/20210423_160913/20210423_160913_S1/Run90089_Iter1_PCIter0_TSR0.5_DF1_v5/FOV11/FOV011_ProcessingTimeLog.csv',
-#                           bucket = nanostring_bucket)
