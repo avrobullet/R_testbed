@@ -9,24 +9,9 @@ config_main <- list(
   resultspath = '100-plex/NSCLC_HIO/'
 )
 config_loading <- list(
-  annotfile_location = 'FOV annotation.csv', #16CPA annotation.xlsx
+  annotfile_location = 'FOV annotation.csv', #16CPA annotation.xlsx?
   annotfile = NULL
 )
-# runs_found <- list(
-#   folder_path <- c(), #config_main$resultspath
-#   slidefolders <- c(), #run_parameters[[5]]
-#   votedfolders <- c(), #run_parameters[[6]]
-#   version <-c(), #version_runname <- as.list(strsplit(run_parameters[[6]],'_')[[1]])
-#                  #version_runname[[length(version_runname)]]
-#   Run_name <- c(), #version_runname[[1]]
-#   Slide_name <- c(), #run_parameters[[5]]
-#   ISH_concentration <- c(),
-#   Dash <- c(),
-#   tissue <- c(), # tissue <- as.list(strsplit(run_parameters[[3]],'_')[[1]])
-#                  # tissue <- as.list(strsplit(tissue[[2]],'-')[[1]])
-#                  # tissue[[1]]
-#   Panel <- c()
-# )
 runs_found <- c()
 # Identify all unique runs
 checkDuplicates <- function(run){
@@ -46,11 +31,12 @@ checkDuplicates <- function(run){
 }
 
 nanostring_bucket <- aws.s3::get_bucket("nanostring-external-smi-commercial")
+nanostring_bucket_table <- data.table::rbindlist(get_bucket(bucket = nanostring_bucket))
 # tempfile <- tempfile()
 # save_object(object = 's3://nanostring-external-smi-commercial/100-plex/Run90070_100pIO-1nM-D3_20210317_155221_S1/CellStatsDir/Run90070_20210317_155221_Cell_Stats_F001.csv',
 #             file = tempfile)
 # write.csv(tempfile)
-s3read_using(FUN = read.csv, object = "s3://nanostring-external-smi-commercial/100-plex/Run90070_100pIO-1nM-D3_20210317_155221_S1/CellStatsDir/Run90070_20210317_155221_Cell_Stats_F001.csv")
+# Convert to mlapply (or some other multithreading function)
 # For all keys...
 for(key in nanostring_bucket_table[,Key]){
   # ...only focus on keys matching the user's designated results path...
@@ -72,28 +58,43 @@ for(key in nanostring_bucket_table[,Key]){
       if(!file.exists(run_parameters[[3]])){
         dir.create(run_parameters[[3]])
       }
-      # # Cell stats directory (CellStatsDir)
-      if(!file.exists(paste0(run_parameters[[3]],'/CellStatsDir'))){
-        dir.create(paste0(run_parameters[[3]],'/CellStatsDir'))
-      } else { # Download data if directory exists
-
+      # Cell stats directory (CellStatsDir)
+      if(str_contains(key,"/CellStatsDir")){
+        if(!file.exists(paste0(run_parameters[[3]],'/CellStatsDir'))){
+          dir.create(paste0(run_parameters[[3]],'/CellStatsDir'))
+        } else { # Download data if directory exists
+          # Save old (previous) directory
+          oldwd <- getwd()
+          setwd(paste0(getwd(),'/',run_parameters[[3]],'/CellStatsDir'))
+          # If data is .csv
+          if(str_contains(run_parameters[[7]],".csv")){
+            save_object(key, file = run_parameters[[7]], bucket = nanostring_bucket)
+          }
+          # Reset to previous directory
+          setwd(oldwd)
+        }
       }
       # Cell Gene expression directory (Run####_Iter#_PCIter#_TSR_v#)
       if(grepl('Run[0-9]+_Iter[0-9]+_PCIter[0]+_TSR[0-9]+.[0-9]+_DF[0-9]+_v[0-9]',run_parameters[6])){
         if(!file.exists(paste0(run_parameters[[3]],'/',run_parameters[6]))){
           dir.create(paste0(run_parameters[[3]],'/',run_parameters[6]))
-        } else { # Download data if directory exists
-
+        } else if(!file.exists(paste0(run_parameters[[3]],'/',run_parameters[6],'/',run_parameters[7]))){
+          dir.create(paste0(run_parameters[[3]],'/',run_parameters[6],'/',run_parameters[7]))
+        } else if(!file.exists(paste0(run_parameters[[3]],'/',run_parameters[6],'/',run_parameters[7],'/',run_parameters[8]))){
+          dir.create(paste0(run_parameters[[3]],'/',run_parameters[6],'/',run_parameters[7],'/',run_parameters[8]))
+        } else { # Download data if directories exists
+          # Save old (previous) directory
+          oldwd <- getwd()
+          setwd(paste0(getwd(),'/',run_parameters[6],'/',run_parameters[7],'/',run_parameters[8]))
+          # If data is .csv
+          if(str_contains(run_parameters[[9]],".csv")){
+            save_object(key, file = run_parameters[[9]], bucket = nanostring_bucket)
+          }
+          # Reset to previous directory
+          setwd(oldwd)
         }
       }
-      # Download corresponding folder
-      # if(str_contains(key,'Run90089_Iter1_PCIter0_TSR0.5_DF1_v5')){
-      #   save_object(object = paste0("s3://nanostring-external-smi-commercial/",key), file = 'filtered_gene_bc_matrices')
-      # }
     }
-    #'gem <- runloadingmodule(config_loading,
-    #'                        loading_results_filepath = "intermediate_results/loading_results.RData",
-    #'                        loading_input_hash_filepath = "intermediate_results/hashes/loading_hash.RData"))
   }
 }
 
