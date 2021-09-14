@@ -70,7 +70,7 @@ add_noise <- function(x, noise_rate = 0.05){
 }
 #'Nehad: Data filtered and corrected provided by Zhi to create +1 million cells
 simulateData <- function(N_SAMPLES){
-  load("CPA data.RData")
+  load(paste0(getwd(),"/ProCogia_Pipeline/CPA data.RData"))
   raw_list  = c() 
   neg_list = c()
   hdf5_file_location <- paste0(getwd(),"/Seurat_HDF5_Files")
